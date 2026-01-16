@@ -56,6 +56,11 @@ export enum PermissionTypes {
    * Type for MCP Server Permissions
    */
   MCP_SERVERS = 'MCP_SERVERS',
+  /**
+   * Type for Advanced Settings Permissions (temperature, model selection, etc.)
+   * Crossnection Inspector: Only ADMIN should have access
+   */
+  ADVANCED_SETTINGS = 'ADVANCED_SETTINGS',
 }
 
 /**
@@ -157,6 +162,16 @@ export const mcpServersPermissionsSchema = z.object({
 });
 export type TMcpServersPermissions = z.infer<typeof mcpServersPermissionsSchema>;
 
+/**
+ * Advanced Settings Permissions Schema
+ * Controls access to temperature, model selection, and other advanced parameters
+ * Default: false (only ADMIN should have access in Crossnection Inspector)
+ */
+export const advancedSettingsPermissionsSchema = z.object({
+  [Permissions.USE]: z.boolean().default(false),
+});
+export type TAdvancedSettingsPermissions = z.infer<typeof advancedSettingsPermissionsSchema>;
+
 // Define a single permissions schema that holds all permission types.
 export const permissionsSchema = z.object({
   [PermissionTypes.PROMPTS]: promptPermissionsSchema,
@@ -172,4 +187,5 @@ export const permissionsSchema = z.object({
   [PermissionTypes.FILE_SEARCH]: fileSearchPermissionsSchema,
   [PermissionTypes.FILE_CITATIONS]: fileCitationsPermissionsSchema,
   [PermissionTypes.MCP_SERVERS]: mcpServersPermissionsSchema,
+  [PermissionTypes.ADVANCED_SETTINGS]: advancedSettingsPermissionsSchema,
 });

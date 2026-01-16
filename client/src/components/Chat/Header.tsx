@@ -9,7 +9,6 @@ import ModelSelector from './Menus/Endpoints/ModelSelector';
 import { useGetStartupConfig } from '~/data-provider';
 import ExportAndShareMenu from './ExportAndShareMenu';
 import BookmarkMenu from './Menus/BookmarkMenu';
-import { TemporaryChat } from './TemporaryChat';
 import AddMultiConvo from './AddMultiConvo';
 import { useHasAccess } from '~/hooks';
 import { cn } from '~/utils';
@@ -69,24 +68,18 @@ export default function Header() {
               {hasAccessToBookmarks === true && <BookmarkMenu />}
               {hasAccessToMultiConvo === true && <AddMultiConvo />}
               {isSmallScreen && (
-                <>
-                  <ExportAndShareMenu
-                    isSharedButtonEnabled={startupConfig?.sharedLinksEnabled ?? false}
-                  />
-                  <TemporaryChat />
-                </>
+                <ExportAndShareMenu
+                  isSharedButtonEnabled={startupConfig?.sharedLinksEnabled ?? false}
+                />
               )}
             </div>
           )}
         </div>
 
         {!isSmallScreen && (
-          <div className="flex items-center gap-2">
-            <ExportAndShareMenu
-              isSharedButtonEnabled={startupConfig?.sharedLinksEnabled ?? false}
-            />
-            <TemporaryChat />
-          </div>
+          <ExportAndShareMenu
+            isSharedButtonEnabled={startupConfig?.sharedLinksEnabled ?? false}
+          />
         )}
       </div>
       {/* Empty div for spacing */}

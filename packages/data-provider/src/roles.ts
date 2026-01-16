@@ -15,6 +15,7 @@ import {
   peoplePickerPermissionsSchema,
   fileCitationsPermissionsSchema,
   mcpServersPermissionsSchema,
+  advancedSettingsPermissionsSchema,
 } from './permissions';
 
 /**
@@ -96,6 +97,9 @@ const defaultRolesSchema = z.object({
         [Permissions.SHARE]: z.boolean().default(true),
         [Permissions.SHARE_PUBLIC]: z.boolean().default(true),
       }),
+      [PermissionTypes.ADVANCED_SETTINGS]: advancedSettingsPermissionsSchema.extend({
+        [Permissions.USE]: z.boolean().default(true),
+      }),
     }),
   }),
   [SystemRoles.USER]: roleSchema.extend({
@@ -162,6 +166,9 @@ export const roleDefaults = defaultRolesSchema.parse({
         [Permissions.SHARE]: true,
         [Permissions.SHARE_PUBLIC]: true,
       },
+      [PermissionTypes.ADVANCED_SETTINGS]: {
+        [Permissions.USE]: true,
+      },
     },
   },
   [SystemRoles.USER]: {
@@ -186,6 +193,9 @@ export const roleDefaults = defaultRolesSchema.parse({
       [PermissionTypes.FILE_SEARCH]: {},
       [PermissionTypes.FILE_CITATIONS]: {},
       [PermissionTypes.MCP_SERVERS]: {},
+      [PermissionTypes.ADVANCED_SETTINGS]: {
+        [Permissions.USE]: false,
+      },
     },
   },
 });

@@ -1,0 +1,23 @@
+# Crossnection Inspector - Caddy Configuration
+# Posiziona questo file in /etc/caddy/Caddyfile sul server
+
+inspector-fork.marcopericci.com {
+    # Reverse proxy verso il container Docker
+    reverse_proxy localhost:3080
+
+    # Header di sicurezza
+    header {
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        Referrer-Policy strict-origin-when-cross-origin
+    }
+
+    # Compressione
+    encode gzip
+
+    # Log
+    log {
+        output file /var/log/caddy/inspector.log
+        format console
+    }
+}
