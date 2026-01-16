@@ -635,6 +635,38 @@ const processAgentFileUpload = async ({ req, res, metadata }) => {
     return await createTextFile({ text, bytes, type: file.mimetype });
   }
 
+  // Handle text files for Anthropic endpoint (CSV, Excel, etc.)
+  // These need to be parsed as text so Claude can read the content in code execution
+  const isAnthropicEndpoint = metadata.endpoint === EModelEndpoint.anthropic;
+  const fileConfig = mergeFileConfig(appConfig.fileConfig);
+  const shouldParseAsText =
+    messageAttachment &&
+    isAnthropicEndpoint &&
+    !file.mimetype.startsWith('image') &&
+    fileConfig.checkType(file.mimetype, fileConfig.text?.supportedMimeTypes || []);
+
+  if (shouldParseAsText) {
+    const { text, bytes: textBytes } = await parseText({ req, file, file_id });
+
+    const fileInfo = removeNullishValues({
+      text,
+      bytes: textBytes,
+      file_id,
+      temp_file_id,
+      user: req.user.id,
+      type: file.mimetype,
+      filepath: file.path,
+      source: FileSources.text,
+      filename: sanitizeFilename(file.originalname),
+      context: FileContext.message_attachment,
+    });
+
+    const result = await createFile(fileInfo, true);
+    return res
+      .status(200)
+      .json({ message: 'Agent file uploaded and processed successfully', ...result });
+  }
+
   // Dual storage pattern for RAG files: Storage + Vector DB
   let storageResult, embeddingResult;
   const isImageFile = file.mimetype.startsWith('image');
