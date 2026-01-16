@@ -53,6 +53,7 @@ export const knownAnthropicParams = new Set([
   'anthropicVersion',
   'anthropicApiUrl',
   'defaultHeaders',
+  'code_execution',
 ]);
 
 /**
@@ -104,6 +105,7 @@ function getLLMConfig(
   const mergedOptions = Object.assign(defaultOptions, options.modelOptions);
 
   let enableWebSearch = mergedOptions.web_search;
+  let enableCodeExecution = mergedOptions.code_execution;
 
   let requestOptions: AnthropicClientOptions & { stream?: boolean } = {
     model: mergedOptions.model,
@@ -161,9 +163,11 @@ function getLLMConfig(
     (requestOptions as Record<string, unknown>).promptCache = true;
   }
 
-  const headers = getClaudeHeaders(requestOptions.model ?? '', supportsCacheControl);
-  if (headers && requestOptions.clientOptions) {
-    requestOptions.clientOptions.defaultHeaders = headers;
+  // Note: headers with enableCodeExecution are set after we know the final value of enableCodeExecution
+  // We'll merge them later after processing defaultParams, addParams, dropParams
+  let baseHeaders = getClaudeHeaders(requestOptions.model ?? '', supportsCacheControl);
+  if (baseHeaders && requestOptions.clientOptions) {
+    requestOptions.clientOptions.defaultHeaders = baseHeaders;
   }
 
   if (options.proxy && requestOptions.clientOptions) {
@@ -189,6 +193,14 @@ function getLLMConfig(
         continue;
       }
 
+      /** Handle code_execution separately - don't add to config */
+      if (key === 'code_execution') {
+        if (enableCodeExecution === undefined && typeof value === 'boolean') {
+          enableCodeExecution = value;
+        }
+        continue;
+      }
+
       if (knownAnthropicParams.has(key)) {
         /** Route known Anthropic params to requestOptions only if undefined */
         applyDefaultParams(requestOptions as Record<string, unknown>, { [key]: value });
@@ -208,6 +220,14 @@ function getLLMConfig(
         continue;
       }
 
+      /** Handle code_execution separately - don't add to config */
+      if (key === 'code_execution') {
+        if (typeof value === 'boolean') {
+          enableCodeExecution = value;
+        }
+        continue;
+      }
+
       if (knownAnthropicParams.has(key)) {
         /** Route known Anthropic params to requestOptions */
         (requestOptions as Record<string, unknown>)[key] = value;
@@ -221,6 +241,11 @@ function getLLMConfig(
     options.dropParams.forEach((param) => {
       if (param === 'web_search') {
         enableWebSearch = false;
+        return;
+      }
+
+      if (param === 'code_execution') {
+        enableCodeExecution = false;
         return;
       }
 
@@ -249,6 +274,26 @@ function getLLMConfig(
       requestOptions.clientOptions.defaultHeaders = {
         ...requestOptions.clientOptions.defaultHeaders,
         'anthropic-beta': 'web-search-2025-03-05',
+      };
+    }
+  }
+
+  // Code Execution Tool (Crossnection Inspector feature)
+  if (enableCodeExecution) {
+    tools.push({
+      type: 'code_execution_20250825',
+      name: 'code_execution',
+    });
+
+    // Update headers with code execution beta
+    const codeExecHeaders = getClaudeHeaders(requestOptions.model ?? '', supportsCacheControl, {
+      enableCodeExecution: true,
+      enableFilesApi: true, // Files API needed for code execution with file uploads
+    });
+    if (codeExecHeaders && requestOptions.clientOptions) {
+      requestOptions.clientOptions.defaultHeaders = {
+        ...requestOptions.clientOptions.defaultHeaders,
+        ...codeExecHeaders,
       };
     }
   }

@@ -27,34 +27,49 @@ function checkPromptCacheSupport(modelName: string): boolean {
 }
 
 /**
- * Gets the appropriate headers for Claude models with cache control
+ * Options for Claude headers generation
+ */
+interface ClaudeHeaderOptions {
+  enableCodeExecution?: boolean;
+  enableFilesApi?: boolean;
+}
+
+/**
+ * Gets the appropriate headers for Claude models with cache control and code execution
  * @param {string} model The model name
  * @param {boolean} supportsCacheControl Whether the model supports cache control
+ * @param {ClaudeHeaderOptions} options Additional options for headers
  * @returns {AnthropicClientOptions['extendedOptions']['defaultHeaders']|undefined} The headers object or undefined if not applicable
  */
 function getClaudeHeaders(
   model: string,
   supportsCacheControl: boolean,
+  options?: ClaudeHeaderOptions,
 ): Record<string, string> | undefined {
-  if (!supportsCacheControl) {
-    return undefined;
+  const betaValues: string[] = [];
+
+  // Model-specific headers for cache control
+  if (supportsCacheControl) {
+    if (/claude-3[-.]5-sonnet/.test(model)) {
+      betaValues.push('max-tokens-3-5-sonnet-2024-07-15');
+    } else if (/claude-3[-.]7/.test(model)) {
+      betaValues.push('token-efficient-tools-2025-02-19', 'output-128k-2025-02-19');
+    } else if (/claude-sonnet-4/.test(model)) {
+      betaValues.push('context-1m-2025-08-07');
+    }
   }
 
-  if (/claude-3[-.]5-sonnet/.test(model)) {
-    return {
-      'anthropic-beta': 'max-tokens-3-5-sonnet-2024-07-15',
-    };
-  } else if (/claude-3[-.]7/.test(model)) {
-    return {
-      'anthropic-beta': 'token-efficient-tools-2025-02-19,output-128k-2025-02-19',
-    };
-  } else if (/claude-sonnet-4/.test(model)) {
-    return {
-      'anthropic-beta': 'context-1m-2025-08-07',
-    };
+  // Code execution header (Crossnection Inspector feature)
+  if (options?.enableCodeExecution) {
+    betaValues.push('code-execution-2025-08-25');
   }
 
-  return undefined;
+  // Files API header (for file uploads with code execution)
+  if (options?.enableFilesApi) {
+    betaValues.push('files-api-2025-04-14');
+  }
+
+  return betaValues.length > 0 ? { 'anthropic-beta': betaValues.join(',') } : undefined;
 }
 
 /**
