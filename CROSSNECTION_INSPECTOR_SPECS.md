@@ -300,13 +300,15 @@ Usare: `claude-sonnet-4-20250514` (Claude 4 Sonnet)
 
 ## Checklist Finale
 
-- [ ] Logo sostituito ovunque
-- [ ] Favicon aggiornati
-- [ ] Titolo app → "Crossnection Inspector"
-- [ ] Icona Temporary Chat rimossa
-- [ ] Footer LibreChat rimosso/modificato
-- [ ] Sidebar destra nascosta di default
-- [ ] 4 ModelSpecs configurati e funzionanti
+- [ ] Logo sostituito ovunque (richiede assets dall'utente)
+- [ ] Favicon aggiornati (richiede assets dall'utente)
+- [x] Titolo app → "Crossnection Inspector" ✅ (APP_TITLE + PWA manifest)
+- [x] Colore brand azzurro #0ea5e9 ✅ (style.css aggiornato)
+- [ ] Icona Temporary Chat rimossa (aggiungere temporaryChat: false in librechat.yaml)
+- [ ] Icona Web Search rimossa (aggiungere webSearch: false in librechat.yaml)
+- [x] Footer LibreChat rimosso/modificato ✅ (CUSTOM_FOOTER env var)
+- [x] Sidebar destra nascosta di default ✅ (sidePanel: false in librechat.yaml)
+- [ ] 4 ModelSpecs configurati e funzionanti (verificare su server)
 - [ ] System prompt applicati correttamente
 - [x] Artifacts funzionanti ✅
 - [x] File upload funzionante ✅ (CSV parsing per Anthropic)
