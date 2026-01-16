@@ -179,8 +179,12 @@ const loadEphemeralAgent = async ({ req, spec, endpoint, model_parameters: _m })
 
   if (ephemeralAgent?.artifacts != null && ephemeralAgent.artifacts) {
     result.artifacts = ephemeralAgent.artifacts;
+    logger.debug('[loadEphemeralAgent] Using ephemeralAgent.artifacts:', ephemeralAgent.artifacts);
   } else if (modelSpec?.preset?.artifacts != null && modelSpec.preset.artifacts !== '') {
     result.artifacts = modelSpec.preset.artifacts;
+    logger.debug('[loadEphemeralAgent] Using modelSpec.preset.artifacts:', modelSpec.preset.artifacts);
+  } else {
+    logger.debug('[loadEphemeralAgent] No artifacts found. modelSpec:', modelSpec?.name, 'preset:', modelSpec?.preset);
   }
   return result;
 };
