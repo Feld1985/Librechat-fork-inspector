@@ -49,6 +49,7 @@ const {
   processAzureAvatar,
 } = require('./Azure');
 const { uploadOpenAIFile, deleteOpenAIFile, getOpenAIFileStream } = require('./OpenAI');
+const { uploadAnthropicFile, deleteAnthropicFile, getAnthropicFileStream } = require('./Anthropic');
 const { getCodeOutputDownloadStream, uploadCodeEnvFile } = require('./Code');
 const { uploadVectors, deleteVectors } = require('./VectorDB');
 
@@ -163,6 +164,30 @@ const openAIStrategy = () => ({
 });
 
 /**
+ * Anthropic Strategy Functions
+ *
+ * For uploading files to Anthropic's Files API (used with code execution tool).
+ * Note: null values mean that the strategy is not supported.
+ * */
+const anthropicStrategy = () => ({
+  /** @type {typeof saveFileFromURL | null} */
+  saveURL: null,
+  /** @type {typeof getLocalFileURL | null} */
+  getFileURL: null,
+  /** @type {typeof saveLocalBuffer | null} */
+  saveBuffer: null,
+  /** @type {typeof processLocalAvatar | null} */
+  processAvatar: null,
+  /** @type {typeof uploadLocalImage | null} */
+  handleImageUpload: null,
+  /** @type {typeof prepareImagesLocal | null} */
+  prepareImagePayload: null,
+  deleteFile: deleteAnthropicFile,
+  handleFileUpload: uploadAnthropicFile,
+  getDownloadStream: getAnthropicFileStream,
+});
+
+/**
  * Code Output Strategy Functions
  *
  * Note: null values mean that the strategy is not supported.
@@ -272,6 +297,8 @@ const getStrategyFunctions = (fileSource) => {
     return vertexMistralOCRStrategy();
   } else if (fileSource === FileSources.text) {
     return localStrategy(); // Text files use local strategy
+  } else if (fileSource === FileSources.anthropic) {
+    return anthropicStrategy();
   } else {
     throw new Error(
       `Invalid file source: ${fileSource}. Available sources: ${Object.values(FileSources).join(', ')}`,

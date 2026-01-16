@@ -393,6 +393,39 @@ const processFileUpload = async ({ req, res, metadata }) => {
   }
 
   const { file } = req;
+
+  // For Anthropic endpoint, check if we should parse text files (CSV, etc.)
+  // This enables Claude to receive file content for analysis
+  const isAnthropicEndpoint = metadata.endpoint === EModelEndpoint.anthropic;
+  const fileConfig = mergeFileConfig(appConfig.fileConfig);
+  const shouldParseAsText =
+    isAnthropicEndpoint &&
+    !file.mimetype.startsWith('image') &&
+    fileConfig.checkType(file.mimetype, fileConfig.text?.supportedMimeTypes || []);
+
+  if (shouldParseAsText) {
+    // Parse text file and save with text content for Anthropic to analyze
+    const { text, bytes: textBytes } = await parseText({ req, file, file_id });
+    const result = await createFile(
+      {
+        text,
+        user: req.user.id,
+        file_id,
+        temp_file_id,
+        bytes: textBytes,
+        filepath: file.path,
+        filename: sanitizeFilename(file.originalname),
+        context: FileContext.message_attachment,
+        type: file.mimetype,
+        source: FileSources.text,
+      },
+      true,
+    );
+    return res
+      .status(200)
+      .json({ message: 'File uploaded and processed successfully', ...result });
+  }
+
   const sanitizedUploadFn = createSanitizedUploadWrapper(handleFileUpload);
   const {
     id,
